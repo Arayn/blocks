@@ -1,5 +1,6 @@
 *.class
 *.txt
+*.iml
 .classpath
 .project
 bin/
