@@ -150,6 +150,15 @@ public class InfoOverlay implements IOverlayRenderer {
         font.drawString(2, font.getHeight() * 4, "Lives: "
                 + ((int) (world.getPlayer().getLifes() * 100)));
 
+
+        font.drawString(2, font.getHeight() * 5, "Yaw: " + world.getPlayer().getHeading());
+        font.drawString(2, font.getHeight() * 6, "Pitch: " + world.getPlayer().getTilt());
+        font.drawString(2, font.getHeight() * 7, "Facing: " + world.getPlayer().getFacing().getName());
+
+        String heldItem = world.getPlayer().getInHand().getShowedName();
+        font.drawString((Display.getWidth() - font.getWidth(heldItem)) / 2, 2, heldItem);
+
+
         String memory = "Used memory: "
                 + (allocatedMemory / (1024 * 1024) - freeMemory / (1024 * 1024))
                 + "MB" + "/" + allocatedMemory / (1024 * 1024) + "MB";

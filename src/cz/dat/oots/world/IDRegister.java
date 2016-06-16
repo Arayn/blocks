@@ -36,6 +36,10 @@ public class IDRegister {
     public static Block flower2;
     public static Block flower3;
     public static Block slab;
+
+    public static Block furnace;
+    public static Block craftingTable;
+
     public static Item itemImaginaryChocolate;
     private World world;
     private Block[] blocks;
@@ -129,6 +133,19 @@ public class IDRegister {
             IDRegister.flower3 = registerBlock(new BlockPlant("oots/plantFlowerWhite",
                     this).setAllTextures(18));
             IDRegister.slab = registerBlock(new BlockSlab("oots/slab", this));
+
+
+
+
+            IDRegister.furnace = registerBlock(new BlockFurnace("oots/furnace", this));
+            IDRegister.craftingTable = registerBlock(new BlockWorkbench("oots/craftingTable", this));
+
+
+
+
+
+
+
         } catch (RegisterException e) {
             e.printStackTrace();
         }

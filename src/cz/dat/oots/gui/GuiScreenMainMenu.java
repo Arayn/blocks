@@ -56,7 +56,9 @@ public class GuiScreenMainMenu extends GuiScreen {
         } else if (button.id == 1) {
             this.game.openGuiScreen(new GuiScreenSettings(this));
         } else if (button.id == 2) {
-            this.game.openGuiScreen(new GuiScreenExit(this));
+            //this.game.openGuiScreen(new GuiScreenExit(this));
+            //Single click exit
+            this.game.exit();
         }
     }
 

@@ -22,8 +22,7 @@ public class PlantDataObject implements IDataObject {
         for (String line : values) {
             if (line.startsWith("d;"
                     + GameUtil.objectTypeAsString(ObjectType.BOOLEAN) + ";")) {
-                this.hasSpecialTexture = Boolean
-                        .parseBoolean(line.substring(8));
+                this.hasSpecialTexture = Boolean.parseBoolean(line.substring(8));
             }
         }
     }

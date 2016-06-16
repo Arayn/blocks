@@ -7,6 +7,7 @@ import cz.dat.oots.data.IDataObject;
 import cz.dat.oots.render.RenderPass;
 import cz.dat.oots.sound.SoundManager;
 import cz.dat.oots.util.Coord3D;
+import cz.dat.oots.util.Facing;
 import cz.dat.oots.world.IDRegister;
 import cz.dat.oots.world.World;
 
@@ -177,6 +178,14 @@ public abstract class Block {
 
     public int getBottomTexture() {
         return this.bottomTexture;
+    }
+
+    public int getTexture(int x, int y, int z, World world, Facing facing) {
+        return 0;
+    }
+
+    public int getTexture(Facing facing) {
+        return 0;
     }
 
     public Block setBottomTexture(int bottomTexture) {

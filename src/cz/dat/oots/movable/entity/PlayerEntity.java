@@ -9,8 +9,9 @@ import cz.dat.oots.overlay.BasicLifesOverlay;
 import cz.dat.oots.render.IOverlayRenderer;
 import cz.dat.oots.settings.Keyconfig;
 import cz.dat.oots.sound.SoundManager;
+import cz.dat.oots.util.Facing;
 import cz.dat.oots.world.Explosion;
-import cz.dat.oots.world.IDRegister;
+import cz.dat.oots.world.RayTraceHit;
 import cz.dat.oots.world.World;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -28,6 +29,7 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
     public static final float JUMP_STRENGTH = 0.4f;
     public static final float MAX_WALK_SPEED = 0.25f;
     public static final int REGENERATION_TICKS = 20;
+
 
     private IObjectStack inHand;
     private BasicLifesOverlay lifesOverlay;
@@ -76,6 +78,12 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
     public void onTick() {
         super.onTick();
 
+        if (Keyboard.isKeyDown(Keyboard.KEY_V)){
+            RayTraceHit hit = rayTrace2(this.world.getGame().s().reach.getValue());
+            if (hit.getType() != RayTraceHit.HitType.None)
+                System.out.println(hit.toString());
+        }
+
         this.updateStandingOn();
 
         this.regenerationTimer++;
@@ -94,7 +102,7 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
 
         int id = this.inHand.getItemID();
         boolean sblock = this.world.getRegister().getBlock(id) != null;
-        
+
         if (Keyboard.isKeyDown(Keyboard.KEY_R) && sblock) {
             if (this.hasSelected) {
                 Explosion.fill(this.world, this.lookingAtX, this.lookingAtY,
@@ -414,9 +422,17 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
         float multi = 1;
 
         if (!this.world.getGui().isOpened()) {
-            if (Keyconfig.isDown(Keyconfig.boost)) {
-                multi = 15;
+            if (Keyboard.isKeyDown(56)){ //alt key
+                multi = 8;
             }
+
+            if (Keyboard.isKeyDown(42)){ //shift key
+                multi = 0.5f;
+            }
+
+//            if (Keyconfig.isDown(Keyconfig.boost)) {
+//                multi = 15;
+//            }
 
             if (Keyconfig.isDown(Keyconfig.ahead)) {
                 speedC -= this.onGround ? 0.25 * multi : 0.03 * multi;
@@ -584,6 +600,77 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
         }
     }
 
+    private RayTraceHit rayTrace2(float distance) {
+        RayTraceHit rayTraceHit = new RayTraceHit();
+
+        float playerX = this.getPosXPartial();
+        float playerY = this.getPosYPartial() + PlayerEntity.PLAYER_HEIGHT;
+        float playerZ = this.getPosZPartial();
+
+        float xl;
+        float yl;
+        float zl;
+
+        float yChange = (float) Math.cos((-this.tilt + 90) / 180 * Math.PI);
+        float ymult = (float) Math.sin((-this.tilt + 90) / 180 * Math.PI);
+
+        float xChange = (float) (Math.cos((-this.heading + 90) / 180 * Math.PI) * ymult);
+        float zChange = (float) (-Math.sin((-this.heading + 90) / 180 * Math.PI) * ymult);
+
+        for (float f = 0; f <= distance; f += 0.01f) {
+            xl = playerX;
+            yl = playerY;
+            zl = playerZ;
+
+
+            playerX = this.getPosXPartial() + f * xChange;
+            playerY = this.getPosYPartial() + PlayerEntity.EYES_HEIGHT + f
+                    * yChange;
+            playerZ = this.getPosZPartial() + f * zChange;
+
+            int hitX = (int) Math.floor(playerX);
+            int hitY = (int) Math.floor(playerY);
+            int hitZ = (int) Math.floor(playerZ);
+
+            if (this.getWorld().getBlock(hitX, hitY, hitZ) > 0) {
+                rayTraceHit = new RayTraceHit(hitX, hitY, hitZ, f, RayTraceHit.HitType.Block);
+                return rayTraceHit;
+            }
+        }
+        return rayTraceHit;
+    }
+
+//    private RayTraceHit rayTrace(float distance) {
+//        RayTraceHit rayTraceHit = new RayTraceHit();
+//
+//        float playerX;
+//        float playerY;
+//        float playerZ;
+//
+//        float yChange = (float) Math.cos((-this.tilt + 90) / 180 * Math.PI);
+//        float ymult = (float) Math.sin((-this.tilt + 90) / 180 * Math.PI);
+//
+//        float xChange = (float) (Math.cos((-this.heading + 90) / 180 * Math.PI) * ymult);
+//        float zChange = (float) (-Math.sin((-this.heading + 90) / 180 * Math.PI) * ymult);
+//
+//        for (float f = 0; f <= distance; f += 0.01f) {
+//            playerX = this.getPosXPartial() + f * xChange;
+//            playerY = this.getPosYPartial() + PlayerEntity.EYES_HEIGHT + f
+//                    * yChange;
+//            playerZ = this.getPosZPartial() + f * zChange;
+//
+//            int hitX = (int) Math.floor(playerX);
+//            int hitY = (int) Math.floor(playerY);
+//            int hitZ = (int) Math.floor(playerZ);
+//
+//            if (this.getWorld().getBlock(hitX, hitY, hitZ) > 0) {
+//                rayTraceHit = new RayTraceHit(playerX, playerY, playerZ, RayTraceHit.HitType.Block);
+//            }
+//        }
+//        return rayTraceHit;
+//    }
+
+
     @Override
     public void setPosition(float x, float y, float z) {
         super.setPosition(x, y, z);
@@ -603,8 +690,16 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
                 world.getBlockObject(selectedBlockID), 32);
     }
 
+    public Facing getFacing() {
+        return Facing.fromIndex(Math.round(this.heading / 90f) & 3);
+    }
+
     public float getHeading() {
         return this.heading;
+    }
+
+    public IObjectStack getInHand() {
+        return inHand;
     }
 
     public void setHeading(float heading) {

@@ -94,7 +94,7 @@ public class RenderEngine {
 
         GLHelper.setOrtho(w, h);
 
-        if (!Keyboard.isKeyDown(Keyboard.KEY_T))
+        if (Keyboard.isKeyDown(Keyboard.KEY_T))
             ARBShaderObjects.glUseProgramObjectARB(this.screenShader.getProgramID());
 
         this.screenShader.setUniform1f("time", System.nanoTime() / 1000000000f);
@@ -363,7 +363,7 @@ public class RenderEngine {
 
     public void renderSelectionBox() {
         if (this.renderWorld.getPlayer().hasSelectedBlock()) {
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
+           // GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(false);
             GL11.glLineWidth(2);
             GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.25F);
@@ -375,7 +375,7 @@ public class RenderEngine {
                     .getLookingAtX() + 1 + 0.002f, this.renderWorld.getPlayer()
                     .getLookingAtY() + 1 + 0.002f, this.renderWorld.getPlayer()
                     .getLookingAtZ() + 1 + 0.002f);
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
+          //  GL11.glEnable(GL11.GL_DEPTH_TEST);
             GL11.glLineWidth(4);
             GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.5F);
 

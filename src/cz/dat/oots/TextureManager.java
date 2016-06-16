@@ -135,6 +135,20 @@ public class TextureManager {
                 .loadImage("cz/dat/oots/res/textures/blocks/leaves_opaque.png"));
         ab.addTexture(TextureManager
                 .loadImage("cz/dat/oots/res/textures/blocks/lava.png"));
+        ab.addTexture(TextureManager
+                .loadImage("cz/dat/oots/res/textures/blocks/furnace_front.png"));
+        ab.addTexture(TextureManager
+                .loadImage("cz/dat/oots/res/textures/blocks/furnace_front_active.png"));
+        ab.addTexture(TextureManager
+                .loadImage("cz/dat/oots/res/textures/blocks/furnace_side.png"));
+        ab.addTexture(TextureManager
+                .loadImage("cz/dat/oots/res/textures/blocks/furnace_top.png"));
+        ab.addTexture(TextureManager
+                .loadImage("cz/dat/oots/res/textures/blocks/crafting_table_front.png"));
+        ab.addTexture(TextureManager
+                .loadImage("cz/dat/oots/res/textures/blocks/crafting_table_side.png"));
+        ab.addTexture(TextureManager
+                .loadImage("cz/dat/oots/res/textures/blocks/crafting_table_top.png"));
 
         TextureManager.atlas = ab.buildAtlas(true);
 
