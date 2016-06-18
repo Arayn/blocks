@@ -239,6 +239,11 @@ public abstract class Block {
         return this;
     }
 
+    public AABB getCollisionBox(World w, int x, int y, int z)
+    {
+        return getAABB().translate(x, y, z);
+    }
+
     public String[] getFootStepSound() {
         return this.footStepSound;
     }

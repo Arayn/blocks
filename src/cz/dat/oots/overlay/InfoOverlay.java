@@ -6,6 +6,7 @@ import cz.dat.oots.profiler.Profiler;
 import cz.dat.oots.profiler.Section;
 import cz.dat.oots.render.IOverlayRenderer;
 import cz.dat.oots.util.GLHelper;
+import cz.dat.oots.world.RayTraceHit;
 import cz.dat.oots.world.World;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
@@ -154,6 +155,14 @@ public class InfoOverlay implements IOverlayRenderer {
         font.drawString(2, font.getHeight() * 5, "Yaw: " + world.getPlayer().getHeading());
         font.drawString(2, font.getHeight() * 6, "Pitch: " + world.getPlayer().getTilt());
         font.drawString(2, font.getHeight() * 7, "Facing: " + world.getPlayer().getFacing().getName());
+
+        float[] lookvec = world.getPlayer().getLookVector();
+        font.drawString(2, font.getHeight() * 8, String.format("X: %1$.3f Y: %2$.3f Z: %3$.3f", lookvec[0], lookvec[1], lookvec[2]));
+        RayTraceHit rayTraceHit = world.getPlayer().getRayTraceHit();
+        if (rayTraceHit != null && rayTraceHit.getType() != RayTraceHit.HitType.None){
+            font.drawString(2, Display.getHeight() - font.getHeight() - 2, rayTraceHit.toString());
+        }
+
 
         String heldItem = world.getPlayer().getInHand().getShowedName();
         font.drawString((Display.getWidth() - font.getWidth(heldItem)) / 2, 2, heldItem);

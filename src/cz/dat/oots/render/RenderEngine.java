@@ -3,6 +3,7 @@ package cz.dat.oots.render;
 import cz.dat.oots.Game;
 import cz.dat.oots.TextureManager;
 import cz.dat.oots.block.Block;
+import cz.dat.oots.collisions.AABB;
 import cz.dat.oots.console.CommandCullLock;
 import cz.dat.oots.movable.entity.PlayerEntity;
 import cz.dat.oots.render.shader.ShaderProgram;
@@ -11,6 +12,7 @@ import cz.dat.oots.util.GLHelper;
 import cz.dat.oots.util.gl.FramebufferObject;
 import cz.dat.oots.util.gl.Texture2D;
 import cz.dat.oots.world.ChunkDistanceComparator;
+import cz.dat.oots.world.RayTraceHit;
 import cz.dat.oots.world.World;
 import cz.dat.oots.world.chunk.Chunk;
 import cz.dat.oots.world.chunk.ChunkProvider;
@@ -363,29 +365,50 @@ public class RenderEngine {
 
     public void renderSelectionBox() {
         if (this.renderWorld.getPlayer().hasSelectedBlock()) {
-           // GL11.glDisable(GL11.GL_DEPTH_TEST);
+            // GL11.glDisable(GL11.GL_DEPTH_TEST);
+            int x = this.renderWorld.getPlayer().getLookingAtX();
+            int y = this.renderWorld.getPlayer().getLookingAtY();
+            int z = this.renderWorld.getPlayer().getLookingAtZ();
+
+
+
+            RayTraceHit ray = this.renderWorld.getPlayer().getRayTraceHit();
+            //RayTraceHit ray = new RayTraceHit();
+            if (ray.getType() == RayTraceHit.HitType.None) {
+                return;
+            }
+
+
+            x = (int) Math.floor(ray.getX());
+            y = (int) Math.floor(ray.getY());
+            z = (int) Math.floor(ray.getZ());
+
+            Block block = this.renderWorld.getBlockObject(x, y, z);
+
+            AABB blockAABB = block.getAABB();
+
             GL11.glDepthMask(false);
             GL11.glLineWidth(2);
-            GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.25F);
+            GL11.glColor4f(1.0F, 0.0F, 0.0F, 1.0F);
 
-            GLHelper.renderLinedBox(this.renderWorld.getPlayer()
-                    .getLookingAtX() - 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtY() - 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtZ() - 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtX() + 1 + 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtY() + 1 + 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtZ() + 1 + 0.002f);
-          //  GL11.glEnable(GL11.GL_DEPTH_TEST);
+
+            GLHelper.renderLinedBox(x + blockAABB.x0 - 0.002f,
+                    y + blockAABB.y0 - 0.002f,
+                    z + blockAABB.z0 - 0.002f,
+                    x + blockAABB.x1 + 0.002f,
+                    y + blockAABB.y1 + 0.002f,
+                    z + blockAABB.z1 + 0.002f);
+            //  GL11.glEnable(GL11.GL_DEPTH_TEST);
             GL11.glLineWidth(4);
             GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.5F);
 
-            GLHelper.renderLinedBox(this.renderWorld.getPlayer()
-                    .getLookingAtX() - 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtY() - 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtZ() - 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtX() + 1 + 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtY() + 1 + 0.002f, this.renderWorld.getPlayer()
-                    .getLookingAtZ() + 1 + 0.002f);
+//            GLHelper.renderLinedBox(this.renderWorld.getPlayer()
+//                    .getLookingAtX() - 0.002f, this.renderWorld.getPlayer()
+//                    .getLookingAtY() - 0.002f, this.renderWorld.getPlayer()
+//                    .getLookingAtZ() - 0.002f, this.renderWorld.getPlayer()
+//                    .getLookingAtX() + 1 + 0.002f, this.renderWorld.getPlayer()
+//                    .getLookingAtY() + 1 + 0.002f, this.renderWorld.getPlayer()
+//                    .getLookingAtZ() + 1 + 0.002f);
             GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             GL11.glDepthMask(true);
         }

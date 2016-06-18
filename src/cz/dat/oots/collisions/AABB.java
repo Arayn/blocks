@@ -1,5 +1,7 @@
 package cz.dat.oots.collisions;
 
+import cz.dat.oots.util.Vector3;
+
 public class AABB {
 
     public float x0;
@@ -197,12 +199,68 @@ public class AABB {
                 : false;
     }
 
-    public void move(float xa, float ya, float za) {
-        this.x0 += xa;
-        this.y0 += ya;
-        this.z0 += za;
-        this.x1 += xa;
-        this.y1 += ya;
-        this.z1 += za;
+//    public void move(float xa, float ya, float za) {
+//        this.x0 += xa;
+//        this.y0 += ya;
+//        this.z0 += za;
+//        this.x1 += xa;
+//        this.y1 += ya;
+//        this.z1 += za;
+//    }
+
+    public AABB move(float xa, float ya, float za) {
+        return new AABB(x0 += xa,
+                y0 += ya,
+                z0 += za,
+                x1 += xa,
+                y1 += ya,
+                z1 += za);
     }
+
+    public AABB translate(float xa, float ya, float za) {
+        return new AABB(x0 + xa,
+                y0 + ya,
+                z0 + za,
+                x1 + xa,
+                y1 + ya,
+                z1 + za);
+    }
+
+    public boolean intersectAABB(AABB other)
+    {
+        Vector3 dist1 = other.getMinExtents().sub(getMaxExtents());
+        Vector3 dist2 = getMinExtents().sub(other.getMaxExtents());
+        Vector3 dist = Vector3.max(dist1, dist2);
+        float maxDistance = dist.max();
+        return maxDistance <= 0.f;
+    }
+
+    public boolean contains(Vector3 point) {
+        return !(x1 < point.getX() || x0 > point.getX()) &&
+                !(y1 < point.getY() || y0 > point.getY()) &&
+                !(z1 < point.getZ() || z0 > point.getZ());
+    }
+
+    public Vector3 getMinExtents()
+    {
+        return new Vector3(x0,y0,z0);
+    }
+
+    public Vector3 getMaxExtents()
+    {
+        return new Vector3(x1,y1,z1);
+    }
+
+    public Vector3 getCenter() {
+        //Vector3 dimensions = new Vector3(x1,y1,z1);
+        //dimensions.add(x0,y0,z0);
+        //dimensions.mul(0.5f);
+
+        float x = (x1 + x0) * 0.5f;
+        float y = (y1 + y0) * 0.5f;
+        float z = (z1 + z0) * 0.5f;
+
+        return new Vector3(x,y,z);
+    }
+
 }

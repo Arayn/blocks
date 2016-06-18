@@ -1,6 +1,7 @@
 package cz.dat.oots.block;
 
 import cz.dat.oots.block.renderer.BlockRendererPlant;
+import cz.dat.oots.collisions.AABB;
 import cz.dat.oots.data.IDataObject;
 import cz.dat.oots.data.block.PlantDataObject;
 import cz.dat.oots.world.IDRegister;
@@ -14,6 +15,7 @@ public class BlockPlant extends Block {
         setOccluder(false);
         setCollidable(false);
         setRenderer(new BlockRendererPlant());
+        setAABB(new AABB(0.25f, 0, 0.25f, 0.75f, 0.75f, 0.75f));
     }
 
     @Override

@@ -2,6 +2,8 @@ package cz.dat.oots.movable.entity;
 
 import cz.dat.oots.block.Block;
 import cz.dat.oots.block.BlockFluid;
+import cz.dat.oots.block.BlockPlant;
+import cz.dat.oots.block.BlockSlab;
 import cz.dat.oots.collisions.AABB;
 import cz.dat.oots.inventory.BasicBlockStack;
 import cz.dat.oots.inventory.IObjectStack;
@@ -10,6 +12,7 @@ import cz.dat.oots.render.IOverlayRenderer;
 import cz.dat.oots.settings.Keyconfig;
 import cz.dat.oots.sound.SoundManager;
 import cz.dat.oots.util.Facing;
+import cz.dat.oots.util.Vector3;
 import cz.dat.oots.world.Explosion;
 import cz.dat.oots.world.RayTraceHit;
 import cz.dat.oots.world.World;
@@ -47,25 +50,23 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
     private float heading = 140.0F;
     private float tilt = -60.0F;
 
+    // public float radYaw = 0f;
+    //public float radPitch = 0f;
+    private RayTraceHit rayTraceHit;
     private boolean onGround = false;
     private boolean wasOnGround = false;
-
     private float speed = 0;
     private float speedStrafe = 0;
-
     private Random rand = new Random();
-
     private float spf;
     private float stepTimer = PlayerEntity.STEP_TIMER_FULL;
     private float fallVelocity;
-
     private Block standingOn = null;
-
     private int regenerationTimer = 0;
 
     public PlayerEntity(World world, float x, float y, float z) {
         super(world, x, y, z);
-        this.setSelectedBlockID(1);
+        this.setHeldItemID(1);
         this.bb = new AABB(this.posX - PlayerEntity.PLAYER_SIZE / 2, this.posY,
                 this.posZ - PlayerEntity.PLAYER_SIZE / 2, this.posX
                 + PlayerEntity.PLAYER_SIZE / 2, this.posY
@@ -74,14 +75,19 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
         this.updateOverlay();
     }
 
+    public RayTraceHit getRayTraceHit() {
+        return rayTraceHit;
+    }
+
     @Override
     public void onTick() {
         super.onTick();
 
-        if (Keyboard.isKeyDown(Keyboard.KEY_V)){
-            RayTraceHit hit = rayTrace2(this.world.getGame().s().reach.getValue());
-            if (hit.getType() != RayTraceHit.HitType.None)
-                System.out.println(hit.toString());
+        if (Keyboard.isKeyDown(Keyboard.KEY_V)) {
+            RayTraceHit hit2 = performRayCast(5f);
+            if (hit2.getType() != RayTraceHit.HitType.None) {
+                System.out.println(hit2.toString());
+            }
         }
 
         this.updateStandingOn();
@@ -95,8 +101,12 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
 
         if (Keyboard.isKeyDown(Keyconfig.explosion)) {
             if (this.hasSelected) {
-                Explosion.explode(this.world, this.lookingAtX, this.lookingAtY,
-                        this.lookingAtZ);
+                int x = (int) Math.floor(this.rayTraceHit.getX());
+                int y = (int) Math.floor(this.rayTraceHit.getY());
+                int z = (int) Math.floor(this.rayTraceHit.getZ());
+                Explosion.explode(this.world, x, y, z);
+//                Explosion.explode(this.world, this.lookingAtX, this.lookingAtY,
+//                        this.lookingAtZ);
             }
         }
 
@@ -142,8 +152,18 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
 
                     } else if (Mouse.getEventButton() == 0) {
                         if (this.hasSelected) {
-                            this.world.setBlock(this.lookingAtX,
-                                    this.lookingAtY, this.lookingAtZ, 0, true,
+                            int x = (int) Math.floor(this.rayTraceHit.getX());
+                            int y = (int) Math.floor(this.rayTraceHit.getY());
+                            int z = (int) Math.floor(this.rayTraceHit.getZ());
+//                            this.world.setBlock(this.lookingAtX,
+//                                    this.lookingAtY, this.lookingAtZ, 0, true,
+//                                    true);
+                            this.world.setBlock(
+                                    x,
+                                    y,
+                                    z,
+                                    0,
+                                    true,
                                     true);
                         }
                     } else if (Mouse.getEventButton() == 1) {
@@ -293,6 +313,7 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
         }
 
         this.updateLookingAt();
+        this.rayTraceHit = performRayCast(this.world.getGame().s().reach.getValue());
     }
 
     public void updateOverlay() {
@@ -422,11 +443,11 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
         float multi = 1;
 
         if (!this.world.getGui().isOpened()) {
-            if (Keyboard.isKeyDown(56)){ //alt key
-                multi = 8;
+            if (Keyboard.isKeyDown(56)) { //alt key
+                multi = 15;
             }
 
-            if (Keyboard.isKeyDown(42)){ //shift key
+            if (Keyboard.isKeyDown(42)) { //shift key
                 multi = 0.5f;
             }
 
@@ -541,7 +562,7 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
                 newSelectedBlock = 1;
             }
 
-            this.setSelectedBlockID(newSelectedBlock);
+            this.setHeldItemID(newSelectedBlock);
         }
 
         if (wh < 0) {
@@ -550,7 +571,7 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
                 newSelectedBlock = world.getRegister().getBlockCount();
             }
 
-            this.setSelectedBlockID(newSelectedBlock);
+            this.setHeldItemID(newSelectedBlock);
         }
     }
 
@@ -600,8 +621,107 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
         }
     }
 
+    public float[] getLookVector() {
+        double rad = Math.toRadians(1.0D);
+
+        float x = (float) Math.sin(this.heading * 0.017453292F - (float) Math.PI);
+        float y = (float) Math.sin(this.tilt * 0.017453292F);
+        float z = (float) -Math.cos(-this.heading * 0.017453292F - (float) Math.PI);
+        float k = (float) -Math.cos(this.tilt * 0.017453292F);
+
+        return new float[]{(x * k), y, (z * k)};
+    }
+
+    public RayTraceHit performRayCast(float maxDist) {
+        RayTraceHit hit = new RayTraceHit();
+        float size = 0.25f;
+        Vector3 origin = new Vector3(posX, posY + PlayerEntity.PLAYER_HEIGHT - size / 2f, posZ);
+        Vector3 pos = origin;
+
+        float[] look = getLookVector();
+        Vector3 ray = new Vector3(look[0], look[1], look[2]);
+
+        int x;
+        int y;
+        int z;
+        float step = 0.015f;
+        AABB rayBB = new AABB(0, 0, 0, size, size, size);
+        Vector3 blockPos = null;
+        for (float dist = 0f; dist < maxDist - step; dist += step) {
+            x = (int) Math.floor(pos.getX());
+            y = (int) Math.floor(pos.getY());
+            z = (int) Math.floor(pos.getZ());
+
+            Block b = world.getBlockObject(x, y, z);
+            //AABB translatedRay = rayBB.translate(pos.getX(), pos.getY(), pos.getZ());
+            if (b != null) {
+                AABB blockBB = b.getCollisionBox(world, x, y, z);
+                if (blockBB != null) {
+                    //if (blockBB.intersectAABB(translatedRay)) {
+                    if (blockBB.contains(pos)) {
+                        Facing side = Facing.Down;
+                        blockPos = new Vector3(x + 0.5f, y + 0.5f, z + 0.5f);
+
+
+                        Vector3 center = blockBB.getCenter();
+                        if (b instanceof BlockSlab || b instanceof BlockPlant) {
+                            // center = blockBB.getCenter();
+                            // System.out.println(center);
+                        }
+
+                        Vector3 diff = center.sub(pos);
+                        //Vector3 diff = blockPos.sub(pos);
+                        float absx = Math.abs(diff.getX());
+                        float absy = Math.abs(diff.getY());
+                        float absz = Math.abs(diff.getZ());
+
+                        if (absx > absy && absx > absz) {
+                            if (diff.getX() > 0)
+                                side = Facing.West;
+                            else
+                                side = Facing.East;
+                        }
+                        if (absy > absx && absy > absz) {
+                            if (diff.getY() > 0)
+                                side = Facing.Down;
+                            else
+                                side = Facing.Up;
+                        }
+                        if (absz > absy && absz > absx) {
+                            if (diff.getZ() > 0)
+                                side = Facing.North;
+                            else
+                                side = Facing.South;
+                        }
+                        hit = new RayTraceHit(x, y, z, 0f, side, RayTraceHit.HitType.Block, b.getName());
+                    }
+                }
+            }
+
+            Vector3 multipliedRay = ray.mul((maxDist + step) - dist);
+            pos = origin.add(multipliedRay);
+
+//            for(Entity e : entities)
+//            {
+//                if(e.getBoundingBox().intersectAABB(translatedRay) && e != sender)
+//                {
+//                    infos.type = CollisionType.ENTITY;
+//                    infos.value = e;
+//                    infos.x = e.posX;
+//                    infos.y = e.posY;
+//                    infos.z = e.posZ;
+//                    infos.distance = maxReachedDist;
+//                }
+//            }
+        }
+        return hit;
+    }
+
     private RayTraceHit rayTrace2(float distance) {
         RayTraceHit rayTraceHit = new RayTraceHit();
+
+        float size = 0.45f;
+        AABB rayBB = new AABB(0, 0, 0, size, size, size);
 
         float playerX = this.getPosXPartial();
         float playerY = this.getPosYPartial() + PlayerEntity.PLAYER_HEIGHT;
@@ -633,43 +753,12 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
             int hitZ = (int) Math.floor(playerZ);
 
             if (this.getWorld().getBlock(hitX, hitY, hitZ) > 0) {
-                rayTraceHit = new RayTraceHit(hitX, hitY, hitZ, f, RayTraceHit.HitType.Block);
+                rayTraceHit = new RayTraceHit(hitX, hitY, hitZ, f, Facing.Down, RayTraceHit.HitType.Block);
                 return rayTraceHit;
             }
         }
         return rayTraceHit;
     }
-
-//    private RayTraceHit rayTrace(float distance) {
-//        RayTraceHit rayTraceHit = new RayTraceHit();
-//
-//        float playerX;
-//        float playerY;
-//        float playerZ;
-//
-//        float yChange = (float) Math.cos((-this.tilt + 90) / 180 * Math.PI);
-//        float ymult = (float) Math.sin((-this.tilt + 90) / 180 * Math.PI);
-//
-//        float xChange = (float) (Math.cos((-this.heading + 90) / 180 * Math.PI) * ymult);
-//        float zChange = (float) (-Math.sin((-this.heading + 90) / 180 * Math.PI) * ymult);
-//
-//        for (float f = 0; f <= distance; f += 0.01f) {
-//            playerX = this.getPosXPartial() + f * xChange;
-//            playerY = this.getPosYPartial() + PlayerEntity.EYES_HEIGHT + f
-//                    * yChange;
-//            playerZ = this.getPosZPartial() + f * zChange;
-//
-//            int hitX = (int) Math.floor(playerX);
-//            int hitY = (int) Math.floor(playerY);
-//            int hitZ = (int) Math.floor(playerZ);
-//
-//            if (this.getWorld().getBlock(hitX, hitY, hitZ) > 0) {
-//                rayTraceHit = new RayTraceHit(playerX, playerY, playerZ, RayTraceHit.HitType.Block);
-//            }
-//        }
-//        return rayTraceHit;
-//    }
-
 
     @Override
     public void setPosition(float x, float y, float z) {
@@ -681,11 +770,11 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
                 + PlayerEntity.PLAYER_SIZE / 2);
     }
 
-    public int getSelectedBlockID() {
+    public int getHeldItemID() {
         return this.inHand.getItemID();
     }
 
-    public void setSelectedBlockID(int selectedBlockID) {
+    public void setHeldItemID(int selectedBlockID) {
         this.inHand = new BasicBlockStack(
                 world.getBlockObject(selectedBlockID), 32);
     }
@@ -698,12 +787,12 @@ public class PlayerEntity extends Entity implements IOverlayRenderer {
         return this.heading;
     }
 
-    public IObjectStack getInHand() {
-        return inHand;
-    }
-
     public void setHeading(float heading) {
         this.heading = heading;
+    }
+
+    public IObjectStack getInHand() {
+        return inHand;
     }
 
     public float getTilt() {
